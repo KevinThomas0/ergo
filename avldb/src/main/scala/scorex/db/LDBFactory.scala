@@ -138,10 +138,12 @@ object LDBFactory extends ScorexLogging {
   lazy val factory: DBFactory = {
     val loaders = List(ClassLoader.getSystemClassLoader, this.getClass.getClassLoader)
 
-    // As LevelDB-JNI has problems on Mac (see https://github.com/ergoplatform/ergo/issues/1067),
-    // we are using only pure-Java LevelDB on Mac
-    val isMac = System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0
-    val factories = if(isMac) {
+    // As LevelDB-JNI has problems on certain systems, such as Mac (see https://github.com/ergoplatform/ergo/issues/1067),
+    // we are using only pure-Java LevelDB
+    val usePureJava = System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0 ||
+      System.getProperty("java.vendor").toLowerCase().indexOf("alpine") >= 0
+
+    val factories = if(usePureJava) {
       List(javaFactory)
     } else {
       List(nativeFactory, javaFactory)
